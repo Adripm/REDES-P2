@@ -16,7 +16,7 @@ import time
 from threading import Lock
 from expiringdict import ExpiringDict
 
-#Semáforo global 
+#Semáforo global
 globalLock =Lock()
 #Dirección de difusión (Broadcast)
 broadcastAddr = bytes([0xFF]*6)
@@ -115,9 +115,9 @@ def processARPReply(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
     global requestedIP,resolvedMAC,awaitingResponse,cache
-    logging.debug('Función no implentada')    
+    logging.debug('Función no implentada')
     #TODO implementar aquí
-        
+
 
 
 
@@ -125,22 +125,28 @@ def createARPRequest(ip:int) -> bytes:
     '''
         Nombre: createARPRequest
         Descripción: Esta función construye una petición ARP y devuelve la trama con el contenido.
-        Argumentos: 
-            -ip: dirección a resolver 
+        Argumentos:
+            -ip: dirección a resolver
         Retorno: Bytes con el contenido de la trama de petición ARP
     '''
     global myMAC,myIP
     frame = bytes()
-    logging.debug('Función no implementada')
-    #TODO implementar aqui
+
+    frame += ARPHeader
+    frame += struct.pack('!H', 0x0001)
+    frame += myMAC
+    frame += struct.pack('!I', myIP)
+    frame += bytes([0x00]*6)
+    frame += struct.pack('!I', ip)
+
     return frame
 
-    
+
 def createARPReply(IP:int ,MAC:bytes) -> bytes:
     '''
         Nombre: createARPReply
         Descripción: Esta función construye una respuesta ARP y devuelve la trama con el contenido.
-        Argumentos: 
+        Argumentos:
             -IP: dirección IP a la que contestar
             -MAC: dirección MAC a la que contestar
         Retorno: Bytes con el contenido de la trama de petición ARP
@@ -155,8 +161,8 @@ def createARPReply(IP:int ,MAC:bytes) -> bytes:
 def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:bytes) -> None:
     '''
         Nombre: process_arp_frame
-        Descripción: Esta función procesa las tramas ARP. 
-            Se ejecutará por cada trama Ethenet que se reciba con Ethertype 0x0806 (si ha sido registrada en initARP). 
+        Descripción: Esta función procesa las tramas ARP.
+            Se ejecutará por cada trama Ethenet que se reciba con Ethertype 0x0806 (si ha sido registrada en initARP).
             Esta función debe realizar, al menos, las siguientes tareas:
                 -Extraer la cabecera común de ARP (6 primeros bytes) y comprobar que es correcta
                 -Extraer el campo opcode
@@ -186,14 +192,25 @@ def initARP(interface:str) -> int:
             -Marcar la variable de nivel ARP inicializado a True
     '''
     global myIP,myMAC,arpInitialized
-    logging.debug('Función no implementada')
-    #TODO implementar aquí
+
+    registerCallback(process_arp_frame, 0x0806)
+
+    myIP = getIP(interface)
+    myMAC = getHwAddr(interface)
+
+    arpInitialized = False
+
+    if ARPResolution(myIP) is not None: # ARP Gratuito
+        return -1
+
+    arpInitialized = True
+
     return 0
 
 def ARPResolution(ip:int) -> bytes:
     '''
         Nombre: ARPResolution
-        Descripción: Esta función intenta realizar una resolución ARP para una IP dada y devuelve la dirección MAC asociada a dicha IP 
+        Descripción: Esta función intenta realizar una resolución ARP para una IP dada y devuelve la dirección MAC asociada a dicha IP
             o None en caso de que no haya recibido respuesta. Esta función debe realizar, al menos, las siguientes tareas:
                 -Comprobar si la IP solicitada existe en la caché:
                 -Si está en caché devolver la información de la caché
@@ -210,6 +227,20 @@ def ARPResolution(ip:int) -> bytes:
             Como estas variables globales se leen y escriben concurrentemente deben ser protegidas con un Lock
     '''
     global requestedIP,awaitingResponse,resolvedMAC
-    logging.debug('Función no implementada')
-    #TODO implementar aquí
+
+    if ip in cache:
+        return cache[ip]
+    else:
+        request = createARPRequest(ip)
+
+        with globalLock:
+            awaitingResponse = True
+            requestedIP = ip
+
+        for _ in range(3):
+            processARPRequest(request, myMAC)
+
+            if awaitingResponse == False:
+                return resolvedMAC
+
     return None

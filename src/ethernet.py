@@ -143,12 +143,11 @@ def startEthernetLevel(interface:str) -> int:
             -Interface: nombre de la interfaz sobre la que inicializar el nivel Ethernet
         Retorno: 0 si todo es correcto, -1 en otro caso
     '''
-    global macAddress,handle,levelInitialized,recvThread
+    global macAddress, handle, levelInitialized, recvThread
     handle = None
-    logging.debug('Función no implementada')
 
     # Ethernet level already initialized
-    if levelInitialized:
+    if 'levelInitialized' in globals() and levelInitialized: # If not defined as a global variable or is True
         return -1
 
     # MAC Address
