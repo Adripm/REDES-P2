@@ -89,8 +89,19 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
             -MAC: dirección MAC origen extraída por el nivel Ethernet
         Retorno: Ninguno
     '''
-    logging.debug('Función no implementada')
-    #TODO implementar aquí
+
+    mac_origen = data[8:14] # Sender Ethernet - 6 Bytes
+    ip_origen = data[14:18] # Sender IP - 4 Bytes
+    ip_destino = data[24:28] # Target IP - 4 Bytes
+
+    if mac_origen != MAC:
+        return
+
+    if ip_origen == ip_destino:
+        pass
+    else:
+        pass
+
 def processARPReply(data:bytes,MAC:bytes)->None:
     '''
         Nombre: processARPReply
@@ -238,9 +249,9 @@ def ARPResolution(ip:int) -> bytes:
             requestedIP = ip
 
         for _ in range(3):
-            processARPRequest(request, myMAC)
+            sendEthernetFrame(request, len(request), 0x0806, broadcastAddr) # EtherType -> ARP
 
             if awaitingResponse == False:
                 return resolvedMAC
 
-    return None
+        return None

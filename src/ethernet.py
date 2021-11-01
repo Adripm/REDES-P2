@@ -199,4 +199,25 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
         Retorno: 0 si todo es correcto, -1 en otro caso
     '''
     global macAddress,handle
-    logging.debug('Función no implementada')
+
+    # Crear trama Ethernet
+    frame = bytes()
+    frame += dstMac
+    frame += macAddress # Origen
+    frame += struct.pack('!I', etherType)
+
+    ETH_FRAME_LENGTH = len(frame) + length # Without padding
+
+    # Error check
+    if ETH_FRAME_LENGTH > ETH_FRAME_MAX:
+        return -1
+
+    # Add payload
+    if ETH_FRAME_LENGTH < ETH_FRAME_MIN:
+        frame += data + bytes(ETH_FRAME_MIN - ETH_FRAME_LENGTH) # Add with zero padding
+    else:
+        frame += data
+
+    # Enviar trama Ethernet
+
+    return pcap_inject(handle, frame, len(frame))
