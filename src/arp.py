@@ -98,9 +98,11 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
     if mac_origen != MAC:
         return
 
-    if ip_destino == myIP:
-        reply = createARPReply(ip_origen, mac_origen)
-        sendEthernetFrame(reply, len(reply), 0x0806, mac_origen)
+    if ip_destino != myIP:
+        return
+
+    reply = createARPReply(ip_origen, mac_origen)
+    sendEthernetFrame(reply, len(reply), 0x0806, mac_origen)
 
     return
 
@@ -128,11 +130,32 @@ def processARPReply(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
     global requestedIP,resolvedMAC,awaitingResponse,cache
-    logging.debug('Función no implentada')
-    #TODO implementar aquí
 
+    mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
+    ip_origen = data[6:10] # Sender IP - 4 Bytes
+    mac_destino = data[10:16] # Target Ethernet - 6 Bytes
+    ip_destino = data[16:20] # Target IP - 4 Bytes
 
+    if mac_origen != MAC:
+        return
 
+    if ip_destino != myIP:
+        return
+
+    with globalLock:
+        if ip_origen != requestedIP:
+            return
+        resolvedMAC = mac_origen
+
+        # Añadir a caché ARP la resolución de la petición
+        with cacheLock:
+            ip = struct.unpack('!I', ip_origen) # IP as int
+            cache[ip] = resolvedMAC
+
+        awaitingResponse = False
+        requestedIP = None
+
+    return
 
 def createARPRequest(ip:int) -> bytes:
     '''
