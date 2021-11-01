@@ -166,8 +166,15 @@ def createARPReply(IP:int ,MAC:bytes) -> bytes:
     '''
     global myMAC,myIP
     frame = bytes()
-    logging.debug('Función no implementada')
-    #TODO implementar aqui
+
+    frame += ARPHeader
+    frame += struct.pack('!H', 0x0002)
+    frame += myMAC
+    frame += struct.pack('!I', myIP)
+
+    frame += MAC
+    frame += struct.pack('!I', IP)
+
     return frame
 
 
