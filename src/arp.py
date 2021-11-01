@@ -136,6 +136,9 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     mac_destino = data[10:16] # Target Ethernet - 6 Bytes
     ip_destino = data[16:20] # Target IP - 4 Bytes
 
+    if awaitingResponse != True: # if not awaiting ARP reply
+        return
+
     if mac_origen != MAC:
         return
 
