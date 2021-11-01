@@ -61,9 +61,21 @@ def process_Ethernet_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> 
         Retorno:
             -Ninguno
     '''
-    logging.debug('Trama nueva. Función no implementada')
-    #TODO: Implementar aquí el código que procesa una trama Ethernet en recepción
 
+    mac_destino = data[0:6]
+    mac_origen = data[6:12]
+    ethertype = data[12:14]
+    payload = data[14:]
+
+    if mac_destino != macAddress and mac_destino != broadcastAddr:
+        return # Descartar esta ARP
+
+    if etherType in upperProtos:
+        # Callback is registered
+        key = struct.unpack('!I',ethertype)[0]
+        upperProtos[key](us, header, payload, mac_origen)
+
+    return
 
 def process_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> None:
     '''
@@ -126,8 +138,9 @@ def registerCallback(callback_func: Callable[[ctypes.c_void_p,pcap_pkthdr,bytes]
     '''
     global upperProtos
     #upperProtos es el diccionario que relaciona función de callback y ethertype
-    logging.debug('Función no implementada')
-
+    if callback_func is None:
+        return
+    upperProtos[ethertype] = callback_func
 
 def startEthernetLevel(interface:str) -> int:
     '''
@@ -167,7 +180,6 @@ def startEthernetLevel(interface:str) -> int:
     return 0
 
 def stopEthernetLevel()->int:
-    global macAddress,handle,levelInitialized,recvThread
     '''
         Nombre: stopEthernetLevel
         Descripción_ Esta función parará y liberará todos los recursos necesarios asociados al nivel Ethernet.
@@ -178,7 +190,19 @@ def stopEthernetLevel()->int:
         Argumentos: Ninguno
         Retorno: 0 si todo es correcto y -1 en otro caso
     '''
-    logging.debug('Función no implementada')
+    global handle,levelInitialized,recvThread
+    # global macAddress
+
+    # Parar hilo de recepción de paquetes
+    recvThread.stop()
+
+    # Cerrar interfaz
+    if pcap_close(handle) != 0:
+        return -1
+
+    # Marcar variable
+    levelInitialized = False
+
     return 0
 
 def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
