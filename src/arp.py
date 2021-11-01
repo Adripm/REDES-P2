@@ -188,10 +188,20 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
             -srcMac: MAC origen de la trama Ethernet que se ha recibido
         Retorno: Ninguno
     '''
-    logging.debug('Función no implementada')
-    #TODO implementar aquí
+    arp_header = data[0:6]
+    opcode = data[6:8]
 
+    arp_frame = data[8:]
 
+    if arp_header != ARPHeader: # Direcciones Ethernet
+        return
+
+    if opcode == bytes([0x00, 0x01]): # ARP Request
+        processARPRequest(arp_frame, srcMac)
+    elif opcode == bytes([0x00, 0x02]): # ARP Reply
+        processARPReply(arp_frame, srcMac)
+    else:
+        return
 
 def initARP(interface:str) -> int:
     '''
