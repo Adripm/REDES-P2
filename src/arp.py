@@ -90,17 +90,19 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
 
-    mac_origen = data[8:14] # Sender Ethernet - 6 Bytes
-    ip_origen = data[14:18] # Sender IP - 4 Bytes
-    ip_destino = data[24:28] # Target IP - 4 Bytes
+    mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
+    ip_origen = data[6:10] # Sender IP - 4 Bytes
+    # mac_destino = data[10:16] # Target Ethernet - 6 Bytes
+    ip_destino = data[16:20] # Target IP - 4 Bytes
 
     if mac_origen != MAC:
         return
 
-    if ip_origen == ip_destino:
-        pass
-    else:
-        pass
+    if ip_destino == myIP:
+        reply = createARPReply(ip_origen, mac_origen)
+        sendEthernetFrame(reply, len(reply), 0x0806, mac_origen)
+
+    return
 
 def processARPReply(data:bytes,MAC:bytes)->None:
     '''
