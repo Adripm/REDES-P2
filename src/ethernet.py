@@ -70,9 +70,9 @@ def process_Ethernet_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> 
     if mac_destino != macAddress and mac_destino != broadcastAddr:
         return # Descartar esta ARP
 
-    if etherType in upperProtos:
+    key = struct.unpack('!I',ethertype)[0]
+    if key in upperProtos:
         # Callback is registered
-        key = struct.unpack('!I',ethertype)[0]
         upperProtos[key](us, header, payload, mac_origen)
 
     return
