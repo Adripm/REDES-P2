@@ -172,6 +172,9 @@ def startEthernetLevel(interface:str) -> int:
     errbuf = bytearray()
     handle = pcap_open_live(interface, ETH_FRAME_MAX, PROMISC, TO_MS, errbuf)
 
+    if handle is None:
+        return -1
+
     #Una vez hemos abierto la interfaz para captura y hemos inicializado las variables globales (macAddress, handle y levelInitialized) arrancamos el hilo de recepción
     recvThread = rxThread()
     recvThread.daemon = True
