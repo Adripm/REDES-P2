@@ -90,6 +90,8 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
 
+    print('Processing ARP Request')
+
     mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
     ip_origen = data[6:10] # Sender IP - 4 Bytes
     # mac_destino = data[10:16] # Target Ethernet - 6 Bytes
@@ -130,6 +132,8 @@ def processARPReply(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
     global requestedIP,resolvedMAC,awaitingResponse,cache
+
+    print('Processing ARP Reply')
 
     mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
     ip_origen = data[6:10] # Sender IP - 4 Bytes
