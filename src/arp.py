@@ -146,7 +146,7 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     if mac_origen != MAC:
         return
 
-    if ip_destino != myIP:
+    if struct.unpack("!I", ip_destino)[0] != myIP:
         return
 
     with globalLock:
@@ -301,6 +301,8 @@ def ARPResolution(ip:int) -> bytes:
 
         for _ in range(3):
             sendEthernetFrame(request, len(request), 0x0806, broadcastAddr) # EtherType -> ARP
+
+            time.sleep(1)
 
             if awaitingResponse == False:
                 return resolvedMAC
