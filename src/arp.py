@@ -90,8 +90,6 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
 
-    print('Processing ARP Request')
-
     mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
     ip_origen = data[6:10] # Sender IP - 4 Bytes
     # mac_destino = data[10:16] # Target Ethernet - 6 Bytes
@@ -133,8 +131,6 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     '''
     global requestedIP,resolvedMAC,awaitingResponse,cache
 
-    print('Processing ARP Reply')
-
     mac_origen = data[0:6] # Sender Ethernet - 6 Bytes
     ip_origen = data[6:10] # Sender IP - 4 Bytes
     mac_destino = data[10:16] # Target Ethernet - 6 Bytes
@@ -149,14 +145,15 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     if struct.unpack("!I", ip_destino)[0] != myIP:
         return
 
+    ip = struct.unpack('!I', ip_origen)[0] # IP as int
+    if ip != requestedIP:
+        return
+
     with globalLock:
-        if ip_origen != requestedIP:
-            return
         resolvedMAC = mac_origen
 
         # Añadir a caché ARP la resolución de la petición
         with cacheLock:
-            ip = struct.unpack('!I', ip_origen)[0] # IP as int
             cache[ip] = resolvedMAC
 
         awaitingResponse = False
@@ -235,8 +232,6 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
     if arp_header != ARPHeader: # Direcciones Ethernet
         return
 
-    print("Process ARP frame with opcode: ", opcode)
-
     if opcode == bytes([0x00, 0x01]): # ARP Request
         processARPRequest(arp_frame, srcMac)
     elif opcode == bytes([0x00, 0x02]): # ARP Reply
@@ -302,7 +297,7 @@ def ARPResolution(ip:int) -> bytes:
         for _ in range(3):
             sendEthernetFrame(request, len(request), 0x0806, broadcastAddr) # EtherType -> ARP
 
-            time.sleep(1)
+            time.sleep(0.1) # Tiempo arbitrario de espera por la ARP Reply
 
             if awaitingResponse == False:
                 return resolvedMAC
