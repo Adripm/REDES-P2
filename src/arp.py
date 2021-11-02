@@ -235,6 +235,8 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
     if arp_header != ARPHeader: # Direcciones Ethernet
         return
 
+    print("Process ARP frame with opcode: ", opcode)
+
     if opcode == bytes([0x00, 0x01]): # ARP Request
         processARPRequest(arp_frame, srcMac)
     elif opcode == bytes([0x00, 0x02]): # ARP Reply

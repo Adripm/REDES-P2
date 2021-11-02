@@ -243,5 +243,7 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
         frame += data
 
     # Enviar trama Ethernet
-
-    return pcap_inject(handle, frame, len(frame))
+    res = pcap_inject(handle, frame, len(frame))
+    if res == -1:
+        return -1
+    return 0
