@@ -228,7 +228,7 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
     frame = bytes()
     frame += dstMac
     frame += macAddress # Origen
-    frame += struct.pack('!I', etherType)
+    frame += struct.pack('!H', etherType)
 
     ETH_FRAME_LENGTH = len(frame) + length # Without padding
 
