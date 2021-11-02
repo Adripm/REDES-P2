@@ -152,7 +152,7 @@ def processARPReply(data:bytes,MAC:bytes)->None:
 
         # Añadir a caché ARP la resolución de la petición
         with cacheLock:
-            ip = struct.unpack('!I', ip_origen) # IP as int
+            ip = struct.unpack('!I', ip_origen)[0] # IP as int
             cache[ip] = resolvedMAC
 
         awaitingResponse = False
